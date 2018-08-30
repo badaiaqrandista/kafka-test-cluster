@@ -3,7 +3,7 @@ version: '2'
 services:
   kerberos:
     container_name: kerberos
-    image: confluentinc/cp-kerberos:3.3.0
+    image: confluentinc/cp-kerberos
     build: ./kerberos
     network_mode: host
     environment:
@@ -14,7 +14,7 @@ services:
 
   zookeeper-sasl-1:
     container_name: zookeeper1
-    image: confluentinc/cp-zookeeper:3.3.0
+    image: confluentinc/cp-zookeeper:${VERSION}
     # This is required because Zookeeper can fail if kerberos is still initializing.
     restart: on-failure:3
     environment:
@@ -36,7 +36,7 @@ services:
 
   zookeeper-sasl-2:
     container_name: zookeeper2
-    image: confluentinc/cp-zookeeper:3.3.0
+    image: confluentinc/cp-zookeeper:${VERSION}
     # This is required because Zookeeper can fail if kerberos is still initializing.
     restart: on-failure:3
     environment:
@@ -59,7 +59,7 @@ services:
 
   zookeeper-sasl-3:
     container_name: zookeeper3
-    image: confluentinc/cp-zookeeper:3.3.0
+    image: confluentinc/cp-zookeeper:${VERSION}
     # This is required because Zookeeper can fail if kerberos is still initializing.
     restart: on-failure:3
     environment:
@@ -81,7 +81,7 @@ services:
 
   kafka-sasl-1:
     container_name: kafka1
-    image: confluentinc/cp-kafka:3.3.0
+    image: confluentinc/cp-kafka:${VERSION}
     network_mode: host
     # This is required because Kafka can fail if kerberos is still initializing.
     restart: on-failure:3
@@ -98,6 +98,8 @@ services:
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
       KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+#      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+#      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "quickstart.confluent.io:19093,quickstart.confluent.io:29093,quickstart.confluent.io:39093"
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker1_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
@@ -112,7 +114,7 @@ services:
 
   kafka-sasl-2:
     container_name: kafka2
-    image: confluentinc/cp-kafka:3.3.0
+    image: confluentinc/cp-kafka:${VERSION}
     network_mode: host
     restart: on-failure:3
     environment:
@@ -128,6 +130,8 @@ services:
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
       KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+#      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+#      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "quickstart.confluent.io:19093,quickstart.confluent.io:29093,quickstart.confluent.io:39093"
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker2_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
@@ -142,7 +146,7 @@ services:
 
   kafka-sasl-3:
     container_name: kafka3
-    image: confluentinc/cp-kafka:3.3.0
+    image: confluentinc/cp-kafka:${VERSION}
     network_mode: host
     restart: on-failure:3
     environment:
@@ -158,6 +162,8 @@ services:
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
       KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+#      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+#      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "quickstart.confluent.io:19093,quickstart.confluent.io:29093,quickstart.confluent.io:39093"
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker3_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
@@ -172,7 +178,7 @@ services:
   
   schema-registry:
     container_name: schema-registry
-    image: confluentinc/cp-schema-registry:3.3.0
+    image: confluentinc/cp-schema-registry:${VERSION}
     network_mode: host
     restart: on-failure:3
     environment:
@@ -204,3 +210,39 @@ services:
       - kafka-sasl-2
       - kafka-sasl-3
 
+  control-center:
+    container_name: control-center
+    image: confluentinc/cp-enterprise-control-center:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: SASL_SSL://quickstart.confluent.io:29094,SASL_SSL://quickstart.confluent.io:39094,SASL_SSL://quickstart.confluent.io:49094
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 2
+      CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_SSL
+      CONTROL_CENTER_STREAMS_SASL_MECHANISM: GSSAPI
+      CONTROL_CENTER_STREAMS_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
+      CONTROL_CENTER_STREAMS_SSL_KEYSTORE_PASSWORD: confluent
+      CONTROL_CENTER_STREAMS_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
+      CONTROL_CENTER_STREAMS_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONTROL_CENTER_STREAMS_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+      CONTROL_CENTER_STREAMS_PRODUCER_SASL_MECHANISM: GSSAPI
+      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
+      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_PASSWORD: confluent
+      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
+      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/producer_jaas.conf
+        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+        -Dsun.security.krb5.debug=true
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    ulimits:
+      nofile: 16384
+    depends_on:
+      - kerberos
+      - kafka-sasl-1
+      - kafka-sasl-2
+      - kafka-sasl-3
