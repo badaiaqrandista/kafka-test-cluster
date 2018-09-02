@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-export VERSION=3.3.0
+export VERSION=4.1.2
 
 eval $(docker-machine env confluent) || exit 1
 

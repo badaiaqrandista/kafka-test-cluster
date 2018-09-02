@@ -88,7 +88,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:19093,SASL_SSL://quickstart.confluent.io:19094
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://quickstart.confluent.io:19093,SASL_SSL://quickstart.confluent.io:19094
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker1.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: broker1_keystore_creds
       KAFKA_SSL_KEY_CREDENTIALS: broker1_sslkey_creds
@@ -103,6 +103,8 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker1_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+        -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.broker1.truststore.jks 
+        -Djava.net.ssl.trustStorePassword=confluent
 #        -Dsun.security.krb5.debug=true
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
@@ -120,7 +122,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:29093,SASL_SSL://quickstart.confluent.io:29094
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://quickstart.confluent.io:29093,SASL_SSL://quickstart.confluent.io:29094
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker2.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: broker2_keystore_creds
       KAFKA_SSL_KEY_CREDENTIALS: broker2_sslkey_creds
@@ -135,6 +137,8 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker2_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+        -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.broker2.truststore.jks 
+        -Djava.net.ssl.trustStorePassword=confluent
 #        -Dsun.security.krb5.debug=true
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
@@ -152,7 +156,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:39093,SASL_SSL://quickstart.confluent.io:39094
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://quickstart.confluent.io:39093,SASL_SSL://quickstart.confluent.io:39094
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker3.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: broker3_keystore_creds
       KAFKA_SSL_KEY_CREDENTIALS: broker3_sslkey_creds
@@ -167,6 +171,8 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker3_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+        -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.broker3.truststore.jks 
+        -Djava.net.ssl.trustStorePassword=confluent
 #        -Dsun.security.krb5.debug=true
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
@@ -201,7 +207,10 @@ services:
       SCHEMA_REGISTRY_DEBUG: "true"
       SCHEMA_REGISTRY_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/producer_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
-        -Dsun.security.krb5.debug=true
+#        -Dsun.security.krb5.debug=true
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/producer_jaas.conf
+        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+#        -Dsun.security.krb5.debug=true
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
     depends_on:
@@ -224,19 +233,24 @@ services:
       CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 2
       CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_SSL
       CONTROL_CENTER_STREAMS_SASL_MECHANISM: GSSAPI
+      CONTROL_CENTER_STREAMS_SASL_KERBEROS_SERVICE_NAME: kafka
       CONTROL_CENTER_STREAMS_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
       CONTROL_CENTER_STREAMS_SSL_KEYSTORE_PASSWORD: confluent
       CONTROL_CENTER_STREAMS_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
       CONTROL_CENTER_STREAMS_SSL_TRUSTSTORE_PASSWORD: confluent
-      CONTROL_CENTER_STREAMS_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
-      CONTROL_CENTER_STREAMS_PRODUCER_SASL_MECHANISM: GSSAPI
-      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
-      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_PASSWORD: confluent
-      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
-      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_PASSWORD: confluent
+#      CONTROL_CENTER_STREAMS_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+#      CONTROL_CENTER_STREAMS_PRODUCER_SASL_MECHANISM: GSSAPI
+#      CONTROL_CENTER_STREAMS_PRODUCER_SASL_KERBEROS_SERVICE_NAME: kafka
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_PASSWORD: confluent
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_PASSWORD: confluent
       CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/producer_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
-        -Dsun.security.krb5.debug=true
+#        -Dsun.security.krb5.debug=true
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/producer_jaas.conf
+        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+#        -Dsun.security.krb5.debug=true
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
     ulimits:
