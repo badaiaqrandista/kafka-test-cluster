@@ -1,0 +1,210 @@
+---
+version: '2'
+services:
+  zookeeper1:
+    container_name: zookeeper1
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    network_mode: host
+
+  zookeeper2:
+    container_name: zookeeper2
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    network_mode: host
+    depends_on:
+      - zookeeper1
+
+  zookeeper3:
+    container_name: zookeeper3
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 42181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    network_mode: host
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+
+  acl-config:
+    container_name: acl-config
+    image: confluentinc/cp-acl-config
+    build: ./acl-config
+    network_mode: host
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    environment:
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
+
+  kafka1:
+    container_name: kafka1
+    image: confluentinc/cp-kafka:${VERSION}
+    network_mode: host
+    # This is required because Kafka can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://quickstart.confluent.io:19093
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf 
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+      - acl-config
+
+  kafka2:
+    container_name: kafka2
+    image: confluentinc/cp-kafka:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://quickstart.confluent.io:29093
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf 
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+      - acl-config
+      - kafka1
+
+  kafka3:
+    container_name: kafka3
+    image: confluentinc/cp-kafka:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://quickstart.confluent.io:39093
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf 
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+      - acl-config
+      - kafka1
+      - kafka2
+  
+  schema-registry:
+    container_name: schema-registry
+    image: confluentinc/cp-schema-registry:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: SASL_PLAINTEXT://quickstart.confluent.io:29093,SASL_PLAINTEXT://quickstart.confluent.io:39093,SASL_PLAINTEXT://quickstart.confluent.io:49093
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: PLAIN
+      SCHEMA_REGISTRY_HOST_NAME: quickstart.confluent.io
+      SCHEMA_REGISTRY_LISTENERS: http://quickstart.confluent.io:18081
+      SCHEMA_REGISTRY_DEBUG: "true"
+      SCHEMA_REGISTRY_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/schema_registry_jaas.conf
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/client_jaas.conf
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - acl-config
+      - kafka1
+      - kafka2
+      - kafka3
+#
+#  control-center:
+#    container_name: control-center
+#    image: confluentinc/cp-enterprise-control-center:${VERSION}
+#    network_mode: host
+#    restart: on-failure:3
+#    environment:
+#      CONTROL_CENTER_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+#      CONTROL_CENTER_BOOTSTRAP_SERVERS: SASL_SSL://quickstart.confluent.io:29094,SASL_SSL://quickstart.confluent.io:39094,SASL_SSL://quickstart.confluent.io:49094
+#      CONTROL_CENTER_REPLICATION_FACTOR: 1
+#      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+#      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+#      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 2
+#      CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_SSL
+#      CONTROL_CENTER_STREAMS_SASL_MECHANISM: GSSAPI
+#      CONTROL_CENTER_STREAMS_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
+#      CONTROL_CENTER_STREAMS_SSL_KEYSTORE_PASSWORD: confluent
+#      CONTROL_CENTER_STREAMS_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
+#      CONTROL_CENTER_STREAMS_SSL_TRUSTSTORE_PASSWORD: confluent
+#      CONTROL_CENTER_STREAMS_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+#      CONTROL_CENTER_STREAMS_PRODUCER_SASL_MECHANISM: GSSAPI
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.keystore.jks
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_KEYSTORE_PASSWORD: confluent
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.producer.truststore.jks
+#      CONTROL_CENTER_STREAMS_PRODUCER_SSL_TRUSTSTORE_PASSWORD: confluent
+#      CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/producer_jaas.conf
+#        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
+#        -Dsun.security.krb5.debug=true
+#    volumes:
+#      - ${PWD}/secrets:/etc/kafka/secrets
+#    ulimits:
+#      nofile: 16384
+#    depends_on:
+#      - kerberos
+#      - kafka-sasl-1
+#      - kafka-sasl-2
+#      - kafka-sasl-3
