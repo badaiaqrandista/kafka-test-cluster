@@ -4,7 +4,7 @@ Each directory in this repository is a self-contained Kafka clusters made of Doc
 
 It is based on the excellent Confluent's docker images: https://github.com/confluentinc/cp-docker-images
 
-It is written to be executed in Linux docker-machine, as explained in: https://docs.confluent.io/current/installation/docker/docs/tutorials/clustered-deployment.html#docker-client-setting-up-a-three-node-kafka-cluster
+It is written to be executed in Linux docker-machine, as explained in: https://docs.confluent.io/current/installation/docker/docs/installation/clustered-deployment.html#docker-client-setting-up-a-three-node-kafka-cluster
 
 # Quickstart
 
