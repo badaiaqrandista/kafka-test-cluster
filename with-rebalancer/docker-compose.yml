@@ -1,0 +1,154 @@
+---
+version: '2'
+services:
+  zookeeper1:
+    container_name: zookeeper1
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    network_mode: host
+
+  zookeeper2:
+    container_name: zookeeper2
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    network_mode: host
+
+  zookeeper3:
+    container_name: zookeeper3
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 42181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    network_mode: host
+
+  kafka1:
+    container_name: kafka1
+    image: confluentinc/cp-enterprise-kafka:${VERSION}
+    network_mode: host
+    # This is required because Kafka can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:19093
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+
+  kafka2:
+    container_name: kafka2
+    image: confluentinc/cp-enterprise-kafka:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:29093
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+
+  kafka3:
+    container_name: kafka3
+    image: confluentinc/cp-enterprise-kafka:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:39093
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+  
+  kafka4:
+    container_name: kafka4
+    image: confluentinc/cp-enterprise-kafka:${VERSION2}
+    network_mode: host
+    # This is required because Kafka can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 4
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:49093
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+
+  kafka5:
+    container_name: kafka5
+    image: confluentinc/cp-enterprise-kafka:${VERSION2}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 5
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:59093
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+
+  kafka6:
+    container_name: kafka6
+    image: confluentinc/cp-enterprise-kafka:${VERSION2}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 6
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:69093
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+    volumes:
+      - ${PWD}/secrets:/etc/kafka/secrets
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
