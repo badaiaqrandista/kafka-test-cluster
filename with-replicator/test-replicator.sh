@@ -4,6 +4,17 @@
 
 eval $(docker-machine env confluent)
 
+mkdir ./run
+
+set_debug_mode() {
+  [ -f ./run/debug-mode-set ] && return
+
+  #docker container exec connect sed -i 's/WARN/DEBUG/' /etc/kafka/tools-log4j.properties
+  docker container exec connect sed -i 's/DEBUG/WARN/' /etc/kafka/tools-log4j.properties
+
+  touch ./run/debug-mode-set
+}
+
 # turn off committing internal consumer offsets to source
 # "offset.topic.commit": false 
 # turn off committing internal consumer offsets to dest
@@ -16,7 +27,7 @@ eval $(docker-machine env confluent)
 # "offset.translator.tasks.max": 1
 
 create_replicator() {
-  [ -f /tmp/replicator-created ] || return
+  [ -f ./run/replicator-created ] && return
 
   echo "Create Replicator"
   docker container exec connect \
@@ -28,39 +39,39 @@ create_replicator() {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "src.zookeeper.connect": "quickstart.confluent.io:22181",
-          "src.kafka.bootstrap.servers": "quickstart.confluent.io:19092,quickstart.confluent.io:19093,quickstart.confluent.io:19094",
-          "dest.zookeeper.connect": "localhost:32181",
-          "dest.kafka.bootstrap.servers": "quickstart.confluent.io:29092,quickstart.confluent.io:29093,quickstart.confluent.io:29094",
+          "src.kafka.bootstrap.servers": "quickstart.confluent.io:19092",
+          "dest.kafka.bootstrap.servers": "quickstart.confluent.io:29092",
           "topic.whitelist": "foo"}}' \
      http://quickstart.confluent.io:28082/connectors
 
-  touch /tmp/replicator-created
+  touch ./run/replicator-created
 }
 
 produce_into_foo_in_cluster_1() {
-  [ -f /tmp/produced-into-foo ] || return
+  [ -f ./run/produced-into-foo ] && return
 
   echo "Console producer in Cluster 1"
   seq -f "a_%g" 10 | docker container exec --interactive connect kafka-console-producer --broker-list quickstart.confluent.io:19092 --topic foo
 
-  touch /tmp/produced-into-foo
+  touch ./run/produced-into-foo
 }
 
 consume_from_foo_in_cluster_1() {
   echo "Console consumer in Cluster 1"
   docker container exec \
     --env CLASSPATH=/usr/share/java/kafka-connect-replicator/kafka-connect-replicator-5.0.0.jar \
+    --detach \
     connect \
     kafka-console-consumer \
     --bootstrap-server quickstart.confluent.io:19092 \
     --topic foo \
     --from-beginning \
-    --max-messages 10 \
-    --timeout-ms 10000 \
     --consumer-property interceptor.classes=io.confluent.connect.replicator.offsets.ConsumerTimestampsInterceptor \
     --consumer-property group.id=foo_group \
     --consumer-property timestamps.topic.replication.factor=1
+
+    #--max-messages 10 \
+    #--timeout-ms 10000 \
 }
 
 print_consumer_group_in_cluster_1() {
@@ -74,6 +85,7 @@ print_consumer_group_in_cluster_2() {
 }
 
 main() {
+  set_debug_mode
   create_replicator
   produce_into_foo_in_cluster_1
   consume_from_foo_in_cluster_1
