@@ -1,0 +1,90 @@
+---
+version: '2'
+services:
+  zookeeper1:
+    container_name: zookeeper1
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 12181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    network_mode: host
+
+  zookeeper2:
+    container_name: zookeeper2
+    image: confluentinc/cp-zookeeper:${VERSION}
+    # This is required because Zookeeper can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    network_mode: host
+
+  kafka1:
+    container_name: kafka1
+    image: confluentinc/cp-enterprise-kafka:${VERSION}
+    network_mode: host
+    # This is required because Kafka can fail if kerberos is still initializing.
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:12181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:19092
+      KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper1
+
+  kafka2:
+    container_name: kafka2
+    image: confluentinc/cp-enterprise-kafka:${VERSION}
+    network_mode: host
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://quickstart.confluent.io:29092
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper2
+
+  connect:
+    container_name: connect
+    image: confluentinc/cp-enterprise-replicator:${VERSION}
+    network_mode: host
+    # This is a workaround for the invalid topic exception. If you allow auto-topic creation, sometimes
+    # the worker fails with Invalid topic exception, restarting fixes the issue.
+    restart: on-failure:3
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: quickstart.confluent.io:29092
+      CONNECT_REST_PORT: 28082
+      CONNECT_GROUP_ID: default
+      CONNECT_CONFIG_STORAGE_TOPIC: default.config
+      CONNECT_OFFSET_STORAGE_TOPIC: default.offsets
+      CONNECT_STATUS_STORAGE_TOPIC: default.status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: quickstart.confluent.io
+      CONNECT_PLUGIN_PATH: /usr/share/java
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+
+#  replicator:
+#    container_name: replicator
+#    image: badaiaqrandista/replicator
+#    build: ./replicator
+#    network_mode: host
+
