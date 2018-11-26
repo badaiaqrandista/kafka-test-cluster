@@ -10,7 +10,7 @@ set_debug_mode() {
   [ -f ./run/debug-mode-set ] && return
 
   #docker container exec connect sed -i 's/WARN/DEBUG/' /etc/kafka/tools-log4j.properties
-  docker container exec connect sed -i 's/DEBUG/WARN/' /etc/kafka/tools-log4j.properties
+  #docker container exec connect sed -i 's/DEBUG/WARN/' /etc/kafka/tools-log4j.properties
 
   touch ./run/debug-mode-set
 }
@@ -41,6 +41,7 @@ create_replicator() {
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "src.kafka.bootstrap.servers": "quickstart.confluent.io:19092",
           "dest.kafka.bootstrap.servers": "quickstart.confluent.io:29092",
+          "confluent.topic.replication.factor": 1,
           "topic.whitelist": "foo"}}' \
      http://quickstart.confluent.io:28082/connectors
 
@@ -57,7 +58,7 @@ produce_into_foo_in_cluster_1() {
 }
 
 consume_from_foo_in_cluster_1() {
-  echo "Console consumer in Cluster 1"
+  echo "Console consumer in Cluster 1 - $(date)"
   docker container exec \
     --env CLASSPATH=/usr/share/java/kafka-connect-replicator/kafka-connect-replicator-5.0.0.jar \
     --detach \
@@ -66,21 +67,34 @@ consume_from_foo_in_cluster_1() {
     --bootstrap-server quickstart.confluent.io:19092 \
     --topic foo \
     --from-beginning \
-    --consumer-property interceptor.classes=io.confluent.connect.replicator.offsets.ConsumerTimestampsInterceptor \
     --consumer-property group.id=foo_group \
+    --consumer-property interceptor.classes=io.confluent.connect.replicator.offsets.ConsumerTimestampsInterceptor \
     --consumer-property timestamps.topic.replication.factor=1
 
     #--max-messages 10 \
     #--timeout-ms 10000 \
 }
 
+consume_from_foo_in_cluster_2() {
+  echo "Console consumer in Cluster 2 - $(date)"
+  docker container exec \
+    connect \
+    kafka-console-consumer \
+    --bootstrap-server quickstart.confluent.io:29092 \
+    --topic foo \
+    --timeout-ms 10000 \
+    --consumer-property group.id=foo_group 
+
+    #--max-messages 10 \
+}
+
 print_consumer_group_in_cluster_1() {
-  echo "Consumer group in Cluster 1"
+  echo "Consumer group in Cluster 1 - $(date)"
   docker container exec connect kafka-consumer-groups --bootstrap-server quickstart.confluent.io:19092 --describe --group foo_group
 }
 
 print_consumer_group_in_cluster_2() {
-  echo "Consumer group in Cluster 2"
+  echo "Consumer group in Cluster 2 - $(date)"
   docker container exec connect kafka-consumer-groups --bootstrap-server quickstart.confluent.io:29092 --describe --group foo_group
 }
 
@@ -89,12 +103,21 @@ main() {
   create_replicator
   produce_into_foo_in_cluster_1
   consume_from_foo_in_cluster_1
-  print_consumer_group_in_cluster_1
-  echo "Wait 20 seconds before continuing"
-  sleep 20
-  print_consumer_group_in_cluster_2
-  #consume_from_foo_in_cluster_2
-  #print_consumer_group_in_cluster_2
+
+  for i in `seq 10`
+  do
+    echo "i=$i"
+    print_consumer_group_in_cluster_1
+    sleep 5
+  done
+
+  for i in `seq 10`
+  do
+    echo "i=$i"
+    #consume_from_foo_in_cluster_2
+    print_consumer_group_in_cluster_2
+    sleep 5
+  done
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"
