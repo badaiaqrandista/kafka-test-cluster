@@ -42,7 +42,8 @@ create_replicator() {
           "src.kafka.bootstrap.servers": "quickstart.confluent.io:19092",
           "dest.kafka.bootstrap.servers": "quickstart.confluent.io:29092",
           "confluent.topic.replication.factor": 1,
-          "topic.whitelist": "foo"}}' \
+          "topic.whitelist": "foo",
+          "producer.linger.ms": 10}}' \
      http://quickstart.confluent.io:28082/connectors
 
   touch ./run/replicator-created
@@ -83,7 +84,7 @@ consume_from_foo_in_cluster_2() {
     --bootstrap-server quickstart.confluent.io:29092 \
     --topic foo \
     --timeout-ms 10000 \
-    --consumer-property group.id=foo_group 
+    --consumer-property group.id=bar_group 
 
     #--max-messages 10 \
 }
@@ -104,20 +105,22 @@ main() {
   produce_into_foo_in_cluster_1
   consume_from_foo_in_cluster_1
 
-  for i in `seq 10`
+  for i in `seq 20`
   do
     echo "i=$i"
     print_consumer_group_in_cluster_1
-    sleep 5
-  done
-
-  for i in `seq 10`
-  do
-    echo "i=$i"
-    #consume_from_foo_in_cluster_2
+    consume_from_foo_in_cluster_2
     print_consumer_group_in_cluster_2
     sleep 5
   done
+
+#  for i in `seq 10`
+#  do
+#    echo "i=$i"
+#    #consume_from_foo_in_cluster_2
+#    print_consumer_group_in_cluster_2
+#    sleep 5
+#  done
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"
