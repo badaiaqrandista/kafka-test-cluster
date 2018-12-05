@@ -42,7 +42,12 @@ create_replicator() {
           "src.kafka.bootstrap.servers": "quickstart.confluent.io:19092",
           "dest.kafka.bootstrap.servers": "quickstart.confluent.io:29092",
           "confluent.topic.replication.factor": 1,
-          "topic.whitelist": "foo"}}' \
+          "topic.whitelist": "foo"}}
+          "offset.translator.tasks.separate": true,
+          "offset.translator.tasks.max": 1,
+          "offset.topic.commit": false,
+          "topic.poll.interval.ms": 10000,
+          "tasks.max": 5}}' \
      http://quickstart.confluent.io:28082/connectors
 
   touch ./run/replicator-created
