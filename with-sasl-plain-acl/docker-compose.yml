@@ -88,6 +88,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
     depends_on:
@@ -113,6 +114,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
     depends_on:
@@ -139,6 +141,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
     volumes:
       - ${PWD}/secrets:/etc/kafka/secrets
     depends_on:
